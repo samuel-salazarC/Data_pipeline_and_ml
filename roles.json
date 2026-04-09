@@ -1,4 +1,0 @@
-{
-    "admin": {"access_level": "full"},
-    "user": {"access_level": "restricted"}
-}
