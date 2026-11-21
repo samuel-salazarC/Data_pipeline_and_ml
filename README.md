@@ -10,7 +10,8 @@ Proyecto universitario desarrollado en equipo por:
 
 ### Estructura del repositorio
 - `data_pipeline.py`: clase `DataPipeline` (descarga desde Kaggle, cifrado de `session_id`, limpieza, codificación, guardado local y subida opcional a GitHub).
-- `app.py`: aplicación Streamlit con las secciones Inicio, Data Pipeline, Visualización y Modelo.
+- `app.py`: aplicación Streamlit con las secciones Inicio, Datos, Exploración, Modelo y Probar una sesión.
+- `.streamlit/config.toml`: tema visual de la aplicación.
 - `ml_model.ipynb`: notebook de comparación de modelos con búsqueda genética de hiperparámetros.
 - `datos/`: datasets generados por el pipeline (`dataset_original.csv` y `dataset_procesado.csv`).
 - `roles.json`: roles de usuario y sus niveles de acceso al pipeline.
@@ -101,6 +102,6 @@ Inicia la interfaz en Streamlit para visualizar datos y probar el modelo.
   Asegúrate de que el usuario tiene `access_level: "full"` en `roles.json`.
 
 - **El modelo da una precisión distinta a la esperada**  
-  La app evalúa sobre un 20 % de datos de prueba. Si existe un `best_model.pkl` antiguo, bórralo junto con `scaler.pkl` para reentrenar.
+  La app entrena el modelo al abrirse y lo evalúa sobre los datos de prueba (20 % por defecto). Puedes cambiar ese porcentaje en la sección Modelo.
 
 ---
