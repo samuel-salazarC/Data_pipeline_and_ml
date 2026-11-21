@@ -4,7 +4,7 @@
 Antes de ejecutar el código, asegúrate de tener instaladas las siguientes herramientas:
 
 ### 🔹 **Software Necesario**
-- Python 3.8 o superior
+- Python 3.10 o superior
 - Pip (gestor de paquetes de Python)
 - Kaggle API configurada (para descargar datasets)
 - Git (para clonar repositorios y autenticarse en GitHub)
@@ -28,48 +28,36 @@ pip install pandas numpy scikit-learn joblib matplotlib seaborn requests cryptog
    - Descarga tu `kaggle.json` desde `Account > API > Create New API Token`.
    - Ubica `kaggle.json` en la ruta `~/.kaggle/kaggle.json` (Linux/Mac) o `C:\Users\TU_USUARIO\.kaggle\kaggle.json` (Windows).
 
-2. **Token de GitHub:**  
-   - Genera un [Token de GitHub](https://github.com/settings/tokens) con permisos de `repo`.
-   - Guárdalo en `token_encrypt.py` y ejecuta este script para encriptarlo:
+2. **Token de GitHub (opcional):**  
+   - Solo es necesario si quieres que el pipeline suba los CSV al repositorio. Sin token, los datos se guardan en `datos/` y la subida se omite.
+   - Genera un [token de GitHub](https://github.com/settings/tokens) con permiso de escritura sobre este repo y defínelo como variable de entorno:
 
      ```bash
-     python token_encrypt.py
+     export GITHUB_TOKEN="tu_token"        # Linux/Mac
+     $env:GITHUB_TOKEN="tu_token"          # Windows PowerShell
      ```
+
+   - En Streamlit también puedes ponerlo en `.streamlit/secrets.toml` como `GITHUB_TOKEN = "tu_token"` (este archivo está en `.gitignore`).
 
 3. **Roles de usuario:**  
-   - Define roles y permisos en un archivo `roles.json` con el siguiente formato:
-
-     ```json
-     {
-       "admin": { "access_level": "full" },
-       "user": { "access_level": "restricted" }
-     }
-     ```
+   - Los roles y permisos se definen en `roles.json`, incluido en el repositorio.
 
 ---
 
 ## 🚀 **Orden de Ejecución**
 Sigue estos pasos para ejecutar correctamente todo el proyecto:
 
-### **1️⃣ Encriptar Token de GitHub**
-```bash
-python token_encrypt.py
-```
-✔️ Esto creará `github_token.enc` con el token encriptado.
-
-### **2️⃣ Ejecutar el Pipeline de Datos**
+### **1️⃣ Ejecutar el Pipeline de Datos**
 ```bash
 python data_pipeline.py
 ```
-✔️ Descarga los datos de Kaggle, los limpia y los sube a GitHub.
+✔️ Descarga los datos de Kaggle, los limpia, los guarda en `datos/` y, si hay `GITHUB_TOKEN`, los sube a GitHub.
 
-### **3️⃣ Entrenar y Guardar el Modelo de Machine Learning**
-```bash
-python ml_model.py
-```
-✔️ Entrena el modelo y guarda `best_model.pkl` y `scaler.pkl`.
+### **2️⃣ Entrenar y Comparar Modelos (opcional)**
+Abre y ejecuta el notebook `ml_model.ipynb`.
+✔️ Compara SVC, árbol de decisión y MLP con búsqueda genética de hiperparámetros.
 
-### **4️⃣ Iniciar la Aplicación Web**
+### **3️⃣ Iniciar la Aplicación Web**
 ```bash
 streamlit run app.py
 ```
@@ -84,7 +72,7 @@ streamlit run app.py
 - **Error de permisos en `roles.json`**  
   ➜ Asegúrate de que el usuario tiene `access_level: "full"` en `roles.json`.
 
-- **No se ejecuta `app.py`**  
-  ➜ Verifica que `best_model.pkl` y `scaler.pkl` existen en el directorio.
+- **El modelo da una precisión distinta a la esperada**  
+  ➜ La app evalúa sobre un 20 % de datos de prueba. Si existe un `best_model.pkl` antiguo, bórralo junto con `scaler.pkl` para reentrenar.
 
 ---

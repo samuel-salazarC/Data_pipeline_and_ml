@@ -7,6 +7,9 @@ import seaborn as sns
 import requests
 from io import StringIO
 from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 from data_pipeline import DataPipeline
 
 # =====================================
@@ -93,8 +96,12 @@ st.sidebar.caption("Proyecto de Ciencia de Datos")
 # Función para cargar datasets
 # =====================================
 def load_dataset_from_github(filename):
-    url = f"https://raw.githubusercontent.com/samuel-salazarC/Data_pipeline_and_ml/master/datos/{filename}"
-    response = requests.get(url)
+    """Carga el dataset desde la carpeta local datos/ o, si no existe, desde GitHub."""
+    local_path = os.path.join("datos", filename)
+    if os.path.exists(local_path):
+        return pd.read_csv(local_path)
+    url = f"https://raw.githubusercontent.com/samuel-salazarC/Data_pipeline_and_ml/main/datos/{filename}"
+    response = requests.get(url, timeout=30)
     if response.status_code == 200:
         return pd.read_csv(StringIO(response.text))
     else:
@@ -104,11 +111,18 @@ def load_dataset_from_github(filename):
 # =====================================
 # Pipeline
 # =====================================
+# Permite definir el token en .streamlit/secrets.toml (GITHUB_TOKEN = "...")
+try:
+    if "GITHUB_TOKEN" in st.secrets and not os.environ.get("GITHUB_TOKEN"):
+        os.environ["GITHUB_TOKEN"] = st.secrets["GITHUB_TOKEN"]
+except Exception:
+    pass
+
 pipeline = DataPipeline(
     dataset_name="dnkumars/cybersecurity-intrusion-detection-dataset",
     github_user="samuel-salazarC",
     github_repo="Data_pipeline_and_ml",
-    github_branch="master"
+    github_branch="main"
 )
 
 # =====================================
@@ -204,41 +218,46 @@ elif section == "Modelo":
         X = df_procesado.drop(columns=['attack_detected'])
         y = df_procesado['attack_detected']
 
+        # Separar entrenamiento y prueba para evaluar con datos no vistos
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42, stratify=y
+        )
+
         # Cargar o entrenar
         if os.path.exists("scaler.pkl") and os.path.exists("best_model.pkl"):
             scaler = joblib.load("scaler.pkl")
             model = joblib.load("best_model.pkl")
+            st.info("Modelo cargado desde best_model.pkl. Si se entrenó con todos los datos, la métrica puede estar inflada.")
         else:
-            from sklearn.preprocessing import StandardScaler
-            from sklearn.ensemble import RandomForestClassifier
-
             scaler = StandardScaler()
-            X_scaled = scaler.fit_transform(X)
+            X_train_scaled = scaler.fit_transform(X_train)
 
             model = RandomForestClassifier(n_estimators=100, random_state=42)
-            model.fit(X_scaled, y)
+            model.fit(X_train_scaled, y_train)
 
             joblib.dump(scaler, "scaler.pkl")
             joblib.dump(model, "best_model.pkl")
 
-        # Predicción
-        X_scaled = scaler.transform(X)
-        predictions = model.predict(X_scaled)
+        # Predicción sobre el conjunto de prueba
+        X_test_scaled = scaler.transform(X_test)
+        predictions = model.predict(X_test_scaled)
 
-        df_procesado["Predicción"] = predictions
+        resultados = X_test.copy()
+        resultados["Real"] = y_test.values
+        resultados["Predicción"] = predictions
 
         # Métricas
-        accuracy = accuracy_score(y, predictions)
+        accuracy = accuracy_score(y_test, predictions)
 
         col1, col2 = st.columns(2)
-        col1.metric("Precisión", f"{accuracy:.2%}")
-        col2.metric("Registros", len(df_procesado))
+        col1.metric("Exactitud (test)", f"{accuracy:.2%}")
+        col2.metric("Registros de prueba", len(X_test))
 
         st.subheader("Predicciones")
-        st.dataframe(df_procesado)
+        st.dataframe(resultados)
 
         st.subheader("Matriz de Confusión")
-        cm = confusion_matrix(y, predictions)
+        cm = confusion_matrix(y_test, predictions)
 
         fig, ax = plt.subplots()
         sns.heatmap(cm, annot=True, fmt='d',
