@@ -1,15 +1,43 @@
-# 📌 **Guía de Instalación y Ejecución del Proyecto**
+# Detección de Intrusiones Cibernéticas: Data Pipeline y ML
 
-## 🛠 **Requerimientos**
+Este proyecto implementa un pipeline ETL que descarga desde Kaggle el dataset [`dnkumars/cybersecurity-intrusion-detection-dataset`](https://www.kaggle.com/datasets/dnkumars/cybersecurity-intrusion-detection-dataset), cifra la columna `session_id`, limpia y codifica los datos, y los guarda en `datos/` (o los sube a GitHub si se define `GITHUB_TOKEN`). Incluye además una aplicación en Streamlit para ejecutar el pipeline, visualizar los datos y entrenar un clasificador Random Forest que detecta ataques.
+
+### Contexto
+Proyecto universitario desarrollado en equipo por:
+- **Nathan Ghenassia**: Ciencia de Datos
+- **María Fernanda Camacho**: Desarrollo Web
+- **Samuel Salazar**: Ingeniería de Datos
+
+### Estructura del repositorio
+- `data_pipeline.py`: clase `DataPipeline` (descarga desde Kaggle, cifrado de `session_id`, limpieza, codificación, guardado local y subida opcional a GitHub).
+- `app.py`: aplicación Streamlit con las secciones Inicio, Data Pipeline, Visualización y Modelo.
+- `ml_model.ipynb`: notebook de comparación de modelos con búsqueda genética de hiperparámetros.
+- `datos/`: datasets generados por el pipeline (`dataset_original.csv` y `dataset_procesado.csv`).
+- `roles.json`: roles de usuario y sus niveles de acceso al pipeline.
+- `requirements.txt`: dependencias de Python.
+- `Informe DataPipeline_ML.pdf`: informe del proyecto.
+
+### Resultados
+- El Random Forest de la app logra **~89 % de exactitud** sobre el 20 % de datos reservado para prueba.
+- El notebook `ml_model.ipynb` compara SVC, árbol de decisión y MLP con búsqueda genética de hiperparámetros.
+
+### Tecnologías
+Python, pandas, scikit-learn, Streamlit, Kaggle API, cryptography.
+
+---
+
+# Guía de Instalación y Ejecución del Proyecto
+
+## Requerimientos
 Antes de ejecutar el código, asegúrate de tener instaladas las siguientes herramientas:
 
-### 🔹 **Software Necesario**
+### Software necesario
 - Python 3.10 o superior
 - Pip (gestor de paquetes de Python)
 - Kaggle API configurada (para descargar datasets)
 - Git (para clonar repositorios y autenticarse en GitHub)
 
-### 🔹 **Librerías de Python**
+### Librerías de Python
 Instala las dependencias ejecutando:
 
 ```bash
@@ -19,10 +47,10 @@ pip install -r requirements.txt
 Si no tienes `requirements.txt`, instala manualmente:
 
 ```bash
-pip install pandas numpy scikit-learn joblib matplotlib seaborn requests cryptography kaggle streamlit
+pip install pandas numpy scikit-learn sklearn-genetic-opt joblib matplotlib seaborn requests cryptography kaggle six streamlit
 ```
 
-### 🔹 **Credenciales y Archivos Necesarios**
+### Credenciales y archivos necesarios
 1. **Token de Kaggle:**  
    - Crea una cuenta en [Kaggle](https://www.kaggle.com/).
    - Descarga tu `kaggle.json` desde `Account > API > Create New API Token`.
@@ -44,35 +72,35 @@ pip install pandas numpy scikit-learn joblib matplotlib seaborn requests cryptog
 
 ---
 
-## 🚀 **Orden de Ejecución**
+## Orden de Ejecución
 Sigue estos pasos para ejecutar correctamente todo el proyecto:
 
-### **1️⃣ Ejecutar el Pipeline de Datos**
+### 1. Ejecutar el pipeline de datos
 ```bash
 python data_pipeline.py
 ```
-✔️ Descarga los datos de Kaggle, los limpia, los guarda en `datos/` y, si hay `GITHUB_TOKEN`, los sube a GitHub.
+Descarga los datos de Kaggle, los limpia, los guarda en `datos/` y, si hay `GITHUB_TOKEN`, los sube a GitHub.
 
-### **2️⃣ Entrenar y Comparar Modelos (opcional)**
+### 2. Entrenar y comparar modelos (opcional)
 Abre y ejecuta el notebook `ml_model.ipynb`.
-✔️ Compara SVC, árbol de decisión y MLP con búsqueda genética de hiperparámetros.
+Compara SVC, árbol de decisión y MLP con búsqueda genética de hiperparámetros.
 
-### **3️⃣ Iniciar la Aplicación Web**
+### 3. Iniciar la aplicación web
 ```bash
 streamlit run app.py
 ```
-✔️ Inicia la interfaz en Streamlit para visualizar datos y probar el modelo.
+Inicia la interfaz en Streamlit para visualizar datos y probar el modelo.
 
 ---
 
-## 🔧 **Solución de Problemas**
+## Solución de Problemas
 - **No se encuentra `kaggle.json`**  
-  ➜ Asegúrate de que el archivo está en `~/.kaggle/` o `C:\Users\TU_USUARIO\.kaggle\`.
-  
+  Asegúrate de que el archivo está en `~/.kaggle/` o `C:\Users\TU_USUARIO\.kaggle\`.
+
 - **Error de permisos en `roles.json`**  
-  ➜ Asegúrate de que el usuario tiene `access_level: "full"` en `roles.json`.
+  Asegúrate de que el usuario tiene `access_level: "full"` en `roles.json`.
 
 - **El modelo da una precisión distinta a la esperada**  
-  ➜ La app evalúa sobre un 20 % de datos de prueba. Si existe un `best_model.pkl` antiguo, bórralo junto con `scaler.pkl` para reentrenar.
+  La app evalúa sobre un 20 % de datos de prueba. Si existe un `best_model.pkl` antiguo, bórralo junto con `scaler.pkl` para reentrenar.
 
 ---
