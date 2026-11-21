@@ -8,5 +8,6 @@ seaborn>=0.13
 requests>=2.31
 cryptography>=42
 kaggle>=1.6
+six>=1.16  # kaggle 2.x lo importa pero no lo declara
 streamlit>=1.40
 ipykernel>=6.29
