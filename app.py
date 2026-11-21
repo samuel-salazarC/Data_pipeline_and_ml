@@ -36,7 +36,7 @@ TARGET = "attack_detected"
 # Códigos que genera el LabelEncoder del pipeline (orden alfabético)
 CATEGORIAS = {
     "protocol_type": {0: "ICMP", 1: "TCP", 2: "UDP"},
-    "encryption_used": {0: "AES", 1: "DES"},
+    "encryption_used": {0: "AES", 1: "DES", 2: "Sin cifrado"},
     "browser_type": {0: "Chrome", 1: "Edge", 2: "Firefox", 3: "Safari", 4: "Unknown"},
 }
 
