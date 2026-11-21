@@ -5,12 +5,11 @@ import base64
 import requests
 import pandas as pd
 from io import StringIO
-from kaggle.api.kaggle_api_extended import KaggleApi
 from cryptography.fernet import Fernet
 from sklearn.preprocessing import LabelEncoder
 
 class DataPipeline:
-    def __init__(self, dataset_name, github_user, github_repo, github_branch, token_file="github_token.enc"):
+    def __init__(self, dataset_name, github_user, github_repo, github_branch="main", output_dir="datos"):
         """
         Inicializa el pipeline de datos.
         """
@@ -18,7 +17,7 @@ class DataPipeline:
         self.github_user = github_user
         self.github_repo = github_repo
         self.github_branch = github_branch
-        self.token_file = token_file
+        self.output_dir = output_dir
         self.encryptor = self.generate_or_load_key()
         self.logs = []
         
@@ -70,6 +69,7 @@ class DataPipeline:
     def authenticate_kaggle(self):
         """Autentica la conexión con Kaggle."""
         self.log("Autenticando en Kaggle...")
+        from kaggle.api.kaggle_api_extended import KaggleApi  # import diferido: kaggle pide credenciales al importarse
         api = KaggleApi()
         api.authenticate()
         self.log("Autenticación en Kaggle exitosa.")
@@ -84,6 +84,7 @@ class DataPipeline:
     def load_csv(self):
         """Carga los archivos CSV descargados en un DataFrame."""
         csv_files = [file for file in os.listdir(".") if file.endswith(".csv")]
+        csv_files = [file for file in csv_files if file.startswith("cybersecurity")] or csv_files
         if csv_files:
             self.log(f"Archivos CSV encontrados: {csv_files}")
             return pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
@@ -114,18 +115,22 @@ class DataPipeline:
         return df
     
     def load_github_token(self):
-        """Carga y decrypta el token de GITHUB"""
-        if not os.path.exists(self.token_file):
-            raise FileNotFoundError("Token encriptado no encontrado.")
-        
-        with open(self.token_file, "rb") as f:
-            encrypted_token = f.read()
-        
-        return self.decrypt_data(encrypted_token)
+        """Lee el token de GitHub desde la variable de entorno GITHUB_TOKEN."""
+        return os.environ.get("GITHUB_TOKEN")
+    
+    def save_dataframe_locally(self, df, filename):
+        """Guarda el dataset en la carpeta de salida local."""
+        os.makedirs(self.output_dir, exist_ok=True)
+        path = os.path.join(self.output_dir, filename)
+        df.to_csv(path, index=False)
+        self.log(f"Archivo guardado localmente en {path}.")
     
     def upload_dataframe_to_github(self, df, github_path):
         """Carga los datasets en GITHUB"""
         token = self.load_github_token()
+        if not token:
+            self.log("GITHUB_TOKEN no definido: se omite la subida a GitHub.", logging.WARNING)
+            return
         
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
@@ -149,10 +154,10 @@ class DataPipeline:
     
     def run_pipeline(self, user_role="admin"):
         """Ejecuta todo el pipeline de datos."""
-        if not self.check_user_role(user_role):
-            return "Acceso denegado."
-        
         try:
+            if not self.check_user_role(user_role):
+                return "Acceso denegado."
+            
             api = self.authenticate_kaggle()
             self.download_dataset(api)
             df = self.load_csv()
@@ -161,9 +166,11 @@ class DataPipeline:
                 df['session_id'] = df['session_id'].apply(self.encrypt_data)
                 self.log("Columna 'session_id' encriptada exitosamente.")
             
-            self.upload_dataframe_to_github(df, "datos/dataset_original.csv")
+            self.save_dataframe_locally(df, "dataset_original.csv")
+            self.upload_dataframe_to_github(df, f"{self.output_dir}/dataset_original.csv")
             df_cleaned = self.clean_data(df)
-            self.upload_dataframe_to_github(df_cleaned, "datos/dataset_procesado.csv")
+            self.save_dataframe_locally(df_cleaned, "dataset_procesado.csv")
+            self.upload_dataframe_to_github(df_cleaned, f"{self.output_dir}/dataset_procesado.csv")
         
         except Exception as e:
             self.log(f"Ocurrió un error: {e}", logging.ERROR)
@@ -175,7 +182,7 @@ if __name__ == "__main__":
         dataset_name="dnkumars/cybersecurity-intrusion-detection-dataset",
         github_user="samuel-salazarC",
         github_repo="Data_pipeline_and_ml",
-        github_branch="master"
+        github_branch="main"
     )
     logs = pipeline.run_pipeline()
     print(logs)
