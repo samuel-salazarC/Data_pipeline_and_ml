@@ -19,7 +19,7 @@ Proyecto universitario desarrollado en equipo por:
 - `Informe DataPipeline_ML.pdf`: informe del proyecto.
 
 ### Resultados
-- El Random Forest de la app logra **~89 % de exactitud** sobre el 20 % de datos reservado para prueba.
+- El Random Forest de la app logra **~88 % de exactitud** sobre el 20 % de datos reservado para prueba.
 - El notebook `ml_model.ipynb` compara SVC, árbol de decisión y MLP con búsqueda genética de hiperparámetros.
 
 ### Tecnologías

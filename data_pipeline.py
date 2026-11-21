@@ -100,6 +100,13 @@ class DataPipeline:
             df.drop('session_id', axis=1, inplace=True)
             self.log("Columna 'session_id' eliminada correctamente.")
         
+        # En el dataset, "None" en encryption_used significa "sin cifrado".
+        # pandas lo lee como valor faltante, así que se restaura antes de eliminar NaN.
+        if 'encryption_used' in df.columns:
+            sin_cifrado = int(df['encryption_used'].isna().sum())
+            df['encryption_used'] = df['encryption_used'].fillna('None')
+            self.log(f"{sin_cifrado} sesiones sin cifrado conservadas como categoría 'None'.")
+        
         df.dropna(inplace=True)
         self.log("Valores NaN eliminados correctamente.")
         
